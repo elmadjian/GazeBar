@@ -25,21 +25,24 @@ ApplicationWindow {
         gaze.y = y;
         if (mainControl.ready) {
             for (var i=0; i < bar.children.length; i++) {
-                if (bar.children[i].objectName == "button") {
+                if (bar.children[i].objectName === "button") {
                     bar.children[i].testCollision(x,y);
                 }
             }
-            if (bar.collision && (y + 150 < bar.y + bar.parent.y || y > bar.y + bar.parent.y + bar.height + 150)) {
-                for (var i=0; i < bar.children.length; i++) {
-                    if (bar.children[i].myId == bar.selectedButton) {
-                        bar.children[i].defaultState = "selected";
+            if (bar.selectedButton !== bar.prevSelected) {
+                if (bar.collision && (y + 150 < bar.y + bar.parent.y || y > bar.y + bar.parent.y + bar.height + 150)) {
+                    for (i=0; i < bar.children.length; i++) {
+                        if (bar.children[i].myId === bar.selectedButton) {
+                            bar.children[i].defaultState = "selected";
+                        }
+                        if (bar.children[i].myId === bar.prevSelected) {
+                            bar.children[i].defaultState = "unfocused";
+                        }
                     }
-                    if (bar.children[i].myId == bar.prevSelected) {
-                        bar.children[i].defaultState = "unfocused";
-                    }
+                    bar.prevSelected = bar.selectedButton;
+                    bar.collision = false;
+                    toolbarManager.update_tool(String(bar.selectedButton));
                 }
-                bar.prevSelected = bar.selectedButton;
-                bar.collision = false;
             }
         }
     }
@@ -80,45 +83,45 @@ ApplicationWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             spacing: 40
-            property var selectedButton: 0
-            property var prevSelected: 0
+            property var selectedButton: "brush"
+            property var prevSelected: "brush"
             property bool collision: false
 
             EyeButton {
                 id: brush
                 imageURL: "figs/painting_brush.svg"
                 defaultState: "selected"
-                myId: 0
+                myId: "brush"
             }
             EyeButton {
                 id: bucket
                 imageURL: "figs/painting_bucket.svg"
-                myId: 1
+                myId: "bucket"
+            }
+            EyeButton {
+                id: eraser
+                imageURL: "figs/painting_eraser.svg"
+                myId: "eraser"
             }
             EyeButton {
                 id: crop
                 imageURL: "figs/painting_crop.png"
-                myId: 2
+                myId: "crop"
             }
             EyeButton {
                 id: circle
                 imageURL: "figs/painting_circle.svg"
-                myId: 3
+                myId: "circle"
             }
             EyeButton {
                 id: square
                 imageURL: "figs/painting_square.svg"
-                myId: 4
-            }
-            EyeButton {
-                id: wand
-                imageURL: "figs/painting_magic_wand.svg"
-                myId: 5
+                myId: "square"
             }
             EyeButton {
                 id: move
                 imageURL: "figs/painting_move.svg"
-                myId: 6
+                myId: "move"
             }
 
             Component.onCompleted: { mainControl.ready = true }
