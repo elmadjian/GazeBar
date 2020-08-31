@@ -55,7 +55,7 @@
      id="layer1"
      transform="translate(0,-197)">
     <path
-       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4.67421865;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers"
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:4.074;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers"
        d="m 12.882374,263.65402 19.213333,-19.21333 19.434177,19.43417 -13.588766,13.4326 c -6.612309,1.75162 -6.59447,1.57402 -10.422619,0.51422 z"
        id="rect838"
        inkscape:connector-curvature="0"
