@@ -25,8 +25,8 @@ Rectangle {
         var norm = Math.sqrt(Math.pow(newX, 2) + Math.pow(newY,2));
         if (norm < button.rad) {
             button.state = "focused";
-            bar.selectedButton = myId;
-            bar.collision = true;
+            parent.selectedButton = myId;
+            parent.collision = true;
         } else {
             button.state = defaultState;
         }
@@ -37,8 +37,8 @@ Rectangle {
             name: "unfocused"
             PropertyChanges {
                 target: button
-                implicitWidth: appWindow.height/1.5
-                implicitHeight: appWindow.height/1.5
+                implicitWidth: parent.parent.iconSize/1.5
+                implicitHeight: parent.parent.iconSize/1.5
                 color: "white"
             }
         },
@@ -46,8 +46,8 @@ Rectangle {
             name: "focused"
             PropertyChanges {
                 target: button
-                implicitWidth: appWindow.height
-                implicitHeight: appWindow.height
+                implicitWidth: parent.parent.iconSize
+                implicitHeight: parent.parent.iconSize
                 color: "#ffff99"
             }
         },
@@ -55,8 +55,8 @@ Rectangle {
             name: "selected"
             PropertyChanges {
                 target: button
-                implicitWidth: appWindow.height/1.5
-                implicitHeight: appWindow.height/1.5
+                implicitWidth: parent.parent.iconSize/1.5
+                implicitHeight: parent.parent.iconSize/1.5
                 color: "#5cacf2"
             }
         }
@@ -66,7 +66,7 @@ Rectangle {
         Transition {
             PropertyAnimation {
                 properties: "implicitWidth,implicitHeight,color"
-                easing: Easing.Linear
+                easing.type: Easing.Linear
                 duration: 150
             }
         }
@@ -81,14 +81,14 @@ Rectangle {
         source:""
     }
 
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        onEntered: {
-            parent.state = "focused";
-        }
-        onExited: {
-            parent.state  = defaultState;
-        }
-    }
+//    MouseArea {
+//        anchors.fill: parent
+//        hoverEnabled: true
+//        onEntered: {
+//            parent.state = "focused";
+//        }
+//        onExited: {
+//            parent.state  = defaultState;
+//        }
+//    }
 }

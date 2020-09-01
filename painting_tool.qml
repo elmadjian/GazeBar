@@ -6,14 +6,14 @@ import QtGraphicalEffects 1.12
 
 ApplicationWindow {
     id: mainControl
-    flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput
+    flags: Qt.FramelessWindowHint | Qt.WindowTransparentForInput | Qt.WindowStaysOnTopHint
     width: 1920
     height: 1080
     //color: "green"
     color: "transparent"
     visible: true
     signal updatePosition(var x, var y)
-    property bool ready: false
+    //property bool ready: false
 
 
     Component.onCompleted: {
@@ -23,36 +23,43 @@ ApplicationWindow {
     onUpdatePosition: {
         gaze.x = x;
         gaze.y = y;
-        if (mainControl.ready) {
-            if (bar.visible) {
-                for (var i=0; i < bar.children.length; i++) {
-                    if (bar.children[i].objectName === "button") {
-                        bar.children[i].testCollision(x,y);
-                    }
-                }
-                if (bar.selectedButton !== bar.prevSelected) {
-                    if (bar.collision && (y + 150 < bar.y + bar.parent.y || y > bar.y + bar.parent.y + bar.height + 150)) {
-                        for (i=0; i < bar.children.length; i++) {
-                            if (bar.children[i].myId === bar.selectedButton) {
-                                bar.children[i].defaultState = "selected";
-                            }
-                            if (bar.children[i].myId === bar.prevSelected) {
-                                bar.children[i].defaultState = "unfocused";
-                            }
-                        }
-                        bar.prevSelected = bar.selectedButton;
-                        bar.collision = false;
-                        toolbarManager.update_tool(String(bar.selectedButton));
-                    }
+
+        testBarCollision(bar, x, y);
+        testBarCollision(brushBar, x, y);
+        if (bottomTrigger.testCollision(x,y) === "open") {
+            bar.state = "available";
+        } else {
+            bar.state = "hidden";
+        }
+
+    }
+
+    function testBarCollision(barId, x, y) {
+        if (barId.visible) {
+            for (var i=0; i < barId.children.length; i++) {
+                if (barId.children[i].objectName === "button") {
+                    barId.children[i].testCollision(x,y);
                 }
             }
-            if (bottomTrigger.testCollision(x,y) === "open") {
-                bar.state = "available";
-            } else {
-                bar.state = "hidden";
+            if (barId.selectedButton !== barId.prevSelected) {
+                if (barId.collision && (y + 150 < barId.y + barId.parent.y || y > barId.y + barId.parent.y + barId.height + 150)) {
+                    for (i=0; i < barId.children.length; i++) {
+                        if (barId.children[i].myId === barId.selectedButton) {
+                            barId.children[i].defaultState = "selected";
+                        }
+                        if (barId.children[i].myId === barId.prevSelected) {
+                            barId.children[i].defaultState = "unfocused";
+                        }
+                    }
+                    barId.prevSelected = barId.selectedButton;
+                    barId.collision = false;
+                    toolbarManager.update_tool(String(barId.selectedButton));
+                }
             }
         }
     }
+
+
 
     Rectangle {
         //FOR DEBUG ONLY!!!
@@ -76,6 +83,7 @@ ApplicationWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: 420
+        property var iconSize: appWindow.height
 
         Trigger {
             id: bottomTrigger
@@ -84,7 +92,6 @@ ApplicationWindow {
             anchors.left: parent.left
             anchors.leftMargin: 50
         }
-
 
         RowLayout {
             id: bar
@@ -151,39 +158,66 @@ ApplicationWindow {
                     }
                 }
             ]
-
-            transitions: [
-                Transition {
-                    PropertyAnimation {
-                        properties: "y"
-                        easing.type: Easing.Linear
-                        duration: 100
-                    }
-                }
-            ]
-
         }
     }
 
-//    Rectangle {
-//        id: secondaryBarWindow
-//        width: 150
-//        height: 1000
-//        //color: "green"
-//        color: "transparent"
-//        visible: true
-//        anchors.horizontalCenter: parent.horizontalCenter
-//        anchors.verticalCenter: parent.verticalCenter
-//        anchors.horizontalCenterOffset: 600
+    Rectangle {
+        id: secondaryBarWindow
+        width: 120
+        height: 800
+        //color: "green"
+        color: "transparent"
+        visible: true
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.horizontalCenterOffset: 830
+        property var iconSize: secondaryBarWindow.width
 
-//        ColumnLayout {
-//            id: bar2
-//            anchors.horizontalCenter: parent.horizontalCenter
-//            anchors.verticalCenter: parent.verticalCenter
-//            spacing: 40
-//            property var selectedButton: "brush"
-//            property var prevSelected: "brush"
-//            property bool collision: false
-//        }
-//    }
+        ColumnLayout {
+            id: brushBar
+            //anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 25
+            property var selectedButton: "brush"
+            property var prevSelected: "brush"
+            property bool collision: false
+
+            EyeButton {
+                id: brush1
+                imageURL: "figs/painting_brush.svg"
+                defaultState: "selected"
+                myId: "brush"
+            }
+            EyeButton {
+                id: brush2
+                imageURL: "figs/painting_bucket.svg"
+                myId: "bucket"
+            }
+            EyeButton {
+                id: brush3
+                imageURL: "figs/painting_eraser.svg"
+                myId: "eraser"
+            }
+            EyeButton {
+                id: brush4
+                imageURL: "figs/painting_crop.png"
+                myId: "crop"
+            }
+            EyeButton {
+                id: brush5
+                imageURL: "figs/painting_circle.svg"
+                myId: "circle"
+            }
+            EyeButton {
+                id: brush6
+                imageURL: "figs/painting_square.svg"
+                myId: "square"
+            }
+            EyeButton {
+                id: brush7
+                imageURL: "figs/painting_move.svg"
+                myId: "move"
+            }
+        }
+    }
 }
