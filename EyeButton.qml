@@ -10,6 +10,7 @@ Rectangle {
     property var ypos: -1
     property var rad: -1
     property var myId: -1
+    property var fac: 0.65
 
     state: defaultState
 
@@ -75,8 +76,8 @@ Rectangle {
     Image {
         id: buttonImg
         anchors.centerIn: parent
-        sourceSize.height: parent.implicitHeight*0.65
-        sourceSize.width: parent.implicitWidth*0.65
+        sourceSize.height: parent.implicitHeight*fac
+        sourceSize.width: parent.implicitWidth*fac
         fillMode: Image.PreserveAspectFit
         source:""
     }

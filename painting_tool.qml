@@ -13,7 +13,7 @@ ApplicationWindow {
     color: "transparent"
     visible: true
     signal updatePosition(var x, var y)
-    //property bool ready: false
+    property var bars: [brushBarWindow, geometricBarWindow, selectionBarWindow]
 
 
     Component.onCompleted: {
@@ -24,17 +24,51 @@ ApplicationWindow {
         gaze.x = x;
         gaze.y = y;
 
-        testBarCollision(bar, x, y);
-        testBarCollision(brushBar, x, y);
+        testBarCollision(bar, x, y, "bottom");
+        testBarCollision(brushBar, x, y, "right");
+        testBarCollision(selectionBar, x, y, "right");
+        testBarCollision(geometricBar, x, y, "right");
         if (bottomTrigger.testCollision(x,y) === "open") {
-            bar.state = "available";
+            bar.visible = true;
+            bars[bar.barIdx[bar.selectedButton]].visible = true;
         } else {
-            bar.state = "hidden";
+            bar.visible = false;
+            bars[bar.barIdx[bar.selectedButton]].visible = false;
         }
 
     }
 
-    function testBarCollision(barId, x, y) {
+    //make a secondary bar visible or not
+    //-----------------------------------
+    function updateSecBarVisibility(curr_idx) {
+        for (var i=0; i < bars.length; i++) {
+            if (i === curr_idx) {
+                bars[i].visible = true;
+            } else {
+                bars[i].visible = false;
+            }
+        }
+    }
+
+    //update which object is selected in a bar
+    //---------------------------------------
+    function updateBarState(barId) {
+        for (var i=0; i < barId.children.length; i++) {
+            if (barId.children[i].myId === barId.selectedButton) {
+                barId.children[i].defaultState = "selected";
+            }
+            if (barId.children[i].myId === barId.prevSelected) {
+                barId.children[i].defaultState = "unfocused";
+            }
+        }
+        barId.prevSelected = barId.selectedButton;
+        barId.collision = false;
+        toolbarManager.update_tool(String(barId.selectedButton));
+    }
+
+    //check collisions with a bar if it is visible
+    //--------------------------------------------
+    function testBarCollision(barId, x, y, position) {
         if (barId.visible) {
             for (var i=0; i < barId.children.length; i++) {
                 if (barId.children[i].objectName === "button") {
@@ -42,23 +76,20 @@ ApplicationWindow {
                 }
             }
             if (barId.selectedButton !== barId.prevSelected) {
-                if (barId.collision && (y + 150 < barId.y + barId.parent.y || y > barId.y + barId.parent.y + barId.height + 150)) {
-                    for (i=0; i < barId.children.length; i++) {
-                        if (barId.children[i].myId === barId.selectedButton) {
-                            barId.children[i].defaultState = "selected";
-                        }
-                        if (barId.children[i].myId === barId.prevSelected) {
-                            barId.children[i].defaultState = "unfocused";
-                        }
+                if (position === "bottom" && barId.collision) {
+                    if (y + 150 < barId.y + barId.parent.y || y > barId.y + barId.parent.y + barId.height + 150) {
+                        updateBarState(barId);
+                        updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
                     }
-                    barId.prevSelected = barId.selectedButton;
-                    barId.collision = false;
-                    toolbarManager.update_tool(String(barId.selectedButton));
+                }
+                else if (position === "right" && barId.collision) {
+                    if (x - 150 < barId.x + barId.parent.x || x > barId.x + barId.parent.x + barId.width + 150) {
+                        updateBarState(barId);
+                    }
                 }
             }
         }
     }
-
 
 
     Rectangle {
@@ -75,7 +106,7 @@ ApplicationWindow {
 
     Rectangle {
         id: appWindow
-        width: 1500
+        width: 1300
         height: 150
         //color: "green"
         color: "transparent"
@@ -101,6 +132,11 @@ ApplicationWindow {
             property var selectedButton: "brush"
             property var prevSelected: "brush"
             property bool collision: false
+            property var barIdx: {
+                "brush": 0,
+                "geo": 1,
+                "select":2
+            }
 
 
             EyeButton {
@@ -126,97 +162,136 @@ ApplicationWindow {
             }
             EyeButton {
                 id: circle
-                imageURL: "figs/painting_circle.svg"
-                myId: "circle"
+                imageURL: "figs/painting_square.svg"
+                myId: "geo"
             }
             EyeButton {
                 id: square
-                imageURL: "figs/painting_square.svg"
-                myId: "square"
+                imageURL: "figs/selection_square.svg"
+                myId: "select"
             }
             EyeButton {
                 id: move
                 imageURL: "figs/painting_move.svg"
                 myId: "move"
             }
-
-            Component.onCompleted: { mainControl.ready = true }
-
-            states: [
-                State {
-                    name: "hidden"
-                    PropertyChanges {
-                        target: bar
-                        visible: false
-                    }
-                },
-                State {
-                    name: "available"
-                    PropertyChanges {
-                        target: bar
-                        visible: true
-                    }
-                }
-            ]
         }
     }
 
-    Rectangle {
-        id: secondaryBarWindow
-        width: 120
-        height: 800
-        //color: "green"
-        color: "transparent"
-        visible: true
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.horizontalCenterOffset: 830
-        property var iconSize: secondaryBarWindow.width
+    SecondaryBar {
+        id: brushBarWindow
+        visible: false
 
         ColumnLayout {
             id: brushBar
-            //anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             spacing: 25
-            property var selectedButton: "brush"
-            property var prevSelected: "brush"
+            property var selectedButton: "brush1"
+            property var prevSelected: "brush1"
             property bool collision: false
 
             EyeButton {
-                id: brush1
-                imageURL: "figs/painting_brush.svg"
-                defaultState: "selected"
-                myId: "brush"
+                imageURL: "figs/brush_1.png"
+                myId: "brush1"
+                fac: 0.8
             }
             EyeButton {
-                id: brush2
-                imageURL: "figs/painting_bucket.svg"
-                myId: "bucket"
+                imageURL: "figs/brush_2.png"
+                myId: "brush2"
+                fac: 0.8
             }
             EyeButton {
-                id: brush3
-                imageURL: "figs/painting_eraser.svg"
-                myId: "eraser"
+                imageURL: "figs/brush_3.png"
+                myId: "brush3"
+                fac: 0.8
             }
             EyeButton {
-                id: brush4
-                imageURL: "figs/painting_crop.png"
-                myId: "crop"
+                imageURL: "figs/brush_4.png"
+                myId: "brush4"
+                fac: 0.8
             }
             EyeButton {
-                id: brush5
-                imageURL: "figs/painting_circle.svg"
-                myId: "circle"
+                imageURL: "figs/brush_5.png"
+                myId: "brush5"
+                fac: 0.8
             }
             EyeButton {
-                id: brush6
+                imageURL: "figs/brush_6.png"
+                myId: "brush6"
+                fac: 0.8
+            }
+            EyeButton {
+                imageURL: "figs/brush_7.png"
+                myId: "brush7"
+                fac: 0.8
+            }
+        }
+    }
+
+
+    SecondaryBar {
+        id: selectionBarWindow
+        visible: false
+
+        ColumnLayout {
+            id: selectionBar
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 25
+            property var selectedButton: "selection1"
+            property var prevSelected: "selection1"
+            property bool collision: false
+
+            EyeButton {
+                imageURL: "figs/selection_square.svg"
+                myId: "selection1"
+            }
+            EyeButton {
+                imageURL: "figs/selection_circle.svg"
+                myId: "selection2"
+            }
+            EyeButton {
+                imageURL: "figs/selection_contour.svg"
+                myId: "selection3"
+            }
+            EyeButton {
+                imageURL: "figs/selection_magic_wand.svg"
+                myId: "selection4"
+            }
+        }
+    }
+
+
+    SecondaryBar {
+        id: geometricBarWindow
+        visible: false
+
+        ColumnLayout {
+            id: geometricBar
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 25
+            property var selectedButton: "geo1"
+            property var prevSelected: "geo1"
+            property bool collision: false
+
+            EyeButton {
                 imageURL: "figs/painting_square.svg"
-                myId: "square"
+                myId: "geo1"
             }
             EyeButton {
-                id: brush7
-                imageURL: "figs/painting_move.svg"
-                myId: "move"
+                imageURL: "figs/painting_circle.svg"
+                myId: "geo2"
+            }
+            EyeButton {
+                imageURL: "figs/path_bezier.svg"
+                myId: "geo3"
+            }
+            EyeButton {
+                imageURL: "figs/path_line.svg"
+                myId: "geo4"
+            }
+            EyeButton {
+                imageURL: "figs/path_polygon.svg"
+                myId: "geo5"
             }
         }
     }

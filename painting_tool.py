@@ -2,7 +2,7 @@ import sys
 import subprocess
 import socket
 import numpy as np
-from pynput.keyboard import Key, Controller
+from pynput.keyboard import Key, Controller, KeyCode
 from threading import Thread
 from PySide2.QtGui import QGuiApplication
 from PySide2.QtQml import QQmlApplicationEngine
@@ -45,11 +45,30 @@ class ToolbarManager(QObject):
             "brush": 'b',
             "bucket": 'f',
             "crop": 'c',
-            "circle": [Key.ctrl, Key.alt, ';'],
-            "square": [Key.ctrl, Key.alt, '.'],
-            #"wand": [Key.ctrl, Key.alt, ']'],
+            "geo": [Key.ctrl, Key.alt, '.'],
+            "select": [Key.ctrl, 'r'],
             "eraser": ['b','e'],
-            "move": 't'
+            "move": 't',
+
+            "brush1": [Key.ctrl, Key.alt, KeyCode.from_vk(97)],
+            "brush2": [Key.ctrl, Key.alt, KeyCode.from_vk(98)],
+            "brush3": [Key.ctrl, Key.alt, KeyCode.from_vk(99)],
+            "brush4": [Key.ctrl, Key.alt, KeyCode.from_vk(100)],
+            "brush5": [Key.ctrl, Key.alt, KeyCode.from_vk(101)],
+            "brush6": [Key.ctrl, Key.alt, KeyCode.from_vk(102)],
+            "brush7": [Key.ctrl, Key.alt, KeyCode.from_vk(103)],
+
+            "geo1": [Key.ctrl, Key.alt, '.'],
+            "geo2": [Key.ctrl, Key.alt, ';'],
+            "geo3": '',
+            "geo4": '',
+            "geo5": '',
+
+            "selection1": [Key.ctrl, 'r'],
+            "selection2": 'j',
+            "selection3": '',
+            "selection4": [Key.ctrl, Key.alt, ']']
+
         }
         return tools
 
