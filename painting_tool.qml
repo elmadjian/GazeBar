@@ -4,6 +4,7 @@ import QtQuick.Controls 2.0
 import QtQuick.Layouts 1.3
 import QtGraphicalEffects 1.12
 
+
 ApplicationWindow {
     id: mainControl
     flags: Qt.FramelessWindowHint | Qt.WindowTransparentForInput | Qt.WindowStaysOnTopHint
@@ -14,6 +15,9 @@ ApplicationWindow {
     visible: true
     signal updatePosition(var x, var y)
     property var bars: [brushBarWindow, geometricBarWindow, selectionBarWindow]
+    property var secBar: false
+    property var clearBar: true
+    property bool updateFeedback: false
 
 
     Component.onCompleted: {
@@ -21,6 +25,7 @@ ApplicationWindow {
     }
 
     onUpdatePosition: {
+        //DEBUG!
         gaze.x = x;
         gaze.y = y;
 
@@ -30,13 +35,28 @@ ApplicationWindow {
         testBarCollision(geometricBar, x, y, "right");
         if (bottomTrigger.testCollision(x,y) === "open") {
             bar.visible = true;
-            bars[bar.barIdx[bar.selectedButton]].visible = true;
+            if (typeof bar.barIdx[bar.selectedButton] !== "undefined") {
+                bars[bar.barIdx[bar.selectedButton]].visible = true;
+            }
         } else {
             bar.visible = false;
-            bars[bar.barIdx[bar.selectedButton]].visible = false;
+            for (var i=0; i < bars.length; i++) {
+                bars[i].visible = false;
+            }
         }
-
+        checkUpdateFeedback(x, y);
     }
+
+    //check whether we have to update feedback or not
+    //------------------------------------------------
+    function checkUpdateFeedback(x, y) {
+        if (updateFeedback && x < 1650 && y < 750) {
+            updateFeedback = false;
+            feedbackTimer.start();
+        }
+    }
+
+
 
     //make a secondary bar visible or not
     //-----------------------------------
@@ -48,16 +68,28 @@ ApplicationWindow {
                 bars[i].visible = false;
             }
         }
+        if (curr_idx < 3) {
+            mainControl.secBar = true;
+            mainControl.clearBar = false;
+            drawingCanvas.requestPaint();
+        } else {
+            mainControl.secBar = false;
+            mainControl.clearBar = true;
+            drawingCanvas.requestPaint();
+        }
     }
 
     //update which object is selected in a bar
     //---------------------------------------
     function updateBarState(barId) {
         for (var i=0; i < barId.children.length; i++) {
-            if (barId.children[i].myId === barId.selectedButton) {
+            if (barId.children[i].myId === barId.focusedButton) {
                 barId.children[i].defaultState = "selected";
+                barId.selectedButton = barId.focusedButton;
+                updateFeedback = true;
+                feedbackImg.source = barId.children[i].imageURL;
             }
-            if (barId.children[i].myId === barId.prevSelected) {
+            else if (barId.children[i].myId === barId.prevSelected) {
                 barId.children[i].defaultState = "unfocused";
             }
         }
@@ -75,7 +107,7 @@ ApplicationWindow {
                     barId.children[i].testCollision(x,y);
                 }
             }
-            if (barId.selectedButton !== barId.prevSelected) {
+            if (barId.focusedButton !== barId.prevSelected) {
                 if (position === "bottom" && barId.collision) {
                     if (y + 150 < barId.y + barId.parent.y || y > barId.y + barId.parent.y + barId.height + 150) {
                         updateBarState(barId);
@@ -83,7 +115,7 @@ ApplicationWindow {
                     }
                 }
                 else if (position === "right" && barId.collision) {
-                    if (x - 150 < barId.x + barId.parent.x || x > barId.x + barId.parent.x + barId.width + 150) {
+                    if (x + 100 < barId.x + barId.parent.x || x > barId.x + barId.parent.x + barId.width + 150) {
                         updateBarState(barId);
                     }
                 }
@@ -91,9 +123,74 @@ ApplicationWindow {
         }
     }
 
+    Timer {
+        id: feedbackTimer
+        interval: 200
+        running: false
+        repeat: false
+        onTriggered: {
+            feedback.opacity = 1;
+            feedback.x = gaze.x;
+            feedback.y = gaze.y;
+        }
+    }
 
     Rectangle {
-        //FOR DEBUG ONLY!!!
+        id: feedback
+        height: 100
+        width: 100
+        color: "#50FFFFFF"
+        opacity: 0
+        radius: width*0.5
+        Image {
+            id: feedbackImg
+            anchors.centerIn: parent
+            sourceSize.height: parent.width*0.7
+            sourceSize.width: parent.width*0.7
+            fillMode: Image.PreserveAspectFit
+            source:""
+        }
+        onOpacityChanged:
+            PropertyAnimation {
+                target: feedback
+                property: "opacity"
+                to: 0
+                duration: 1500
+                easing.type: Easing.InQuart
+            }
+    }
+
+
+    Canvas
+    {
+        id: drawingCanvas
+        anchors.fill: parent
+        onPaint:
+        {
+            var ctx = getContext("2d")
+            ctx.lineWidth = 2;
+
+            //second menu
+            if (mainControl.secBar) {
+                ctx.strokeStyle = "#28afd1";
+                ctx.fillStyle = "#28afd1";
+                ctx.beginPath();
+                ctx.moveTo(1610, 970);
+                ctx.lineTo(1800, 970);
+                ctx.lineTo(1800, 940);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(1800, 940, 8, 0, Math.PI*2);
+                ctx.fill();
+            }
+
+            if (mainControl.clearBar) {
+                ctx.clearRect(0,0, drawingCanvas.width, drawingCanvas.height);
+            }
+        }
+    }
+
+    Rectangle {
         id: gaze
         x: -99
         y: -99
@@ -108,12 +205,15 @@ ApplicationWindow {
         id: appWindow
         width: 1300
         height: 150
-        //color: "green"
+        //color: "blue"
         color: "transparent"
         visible: true
+        border.color: "#28afd1"
+        border.width: 2
+        radius: 30
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: 420
+        anchors.verticalCenterOffset: 430
         property var iconSize: appWindow.height
 
         Trigger {
@@ -126,9 +226,9 @@ ApplicationWindow {
 
         RowLayout {
             id: bar
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.centerIn: parent
             spacing: 40
+            property var focusedButton: "brush"
             property var selectedButton: "brush"
             property var prevSelected: "brush"
             property bool collision: false
@@ -184,8 +284,9 @@ ApplicationWindow {
 
         ColumnLayout {
             id: brushBar
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 25
+            spacing: 20
+            anchors.centerIn: parent
+            property var focusedButton: "brush1"
             property var selectedButton: "brush1"
             property var prevSelected: "brush1"
             property bool collision: false
@@ -194,36 +295,43 @@ ApplicationWindow {
                 imageURL: "figs/brush_1.png"
                 myId: "brush1"
                 fac: 0.8
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/brush_2.png"
                 myId: "brush2"
                 fac: 0.8
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/brush_3.png"
                 myId: "brush3"
                 fac: 0.8
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/brush_4.png"
                 myId: "brush4"
                 fac: 0.8
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/brush_5.png"
                 myId: "brush5"
                 fac: 0.8
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/brush_6.png"
                 myId: "brush6"
                 fac: 0.8
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/brush_7.png"
                 myId: "brush7"
                 fac: 0.8
+                Layout.alignment: Qt.AlignHCenter
             }
         }
     }
@@ -235,8 +343,9 @@ ApplicationWindow {
 
         ColumnLayout {
             id: selectionBar
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.centerIn: parent
             spacing: 25
+            property var focusedButton: "selection1"
             property var selectedButton: "selection1"
             property var prevSelected: "selection1"
             property bool collision: false
@@ -244,18 +353,22 @@ ApplicationWindow {
             EyeButton {
                 imageURL: "figs/selection_square.svg"
                 myId: "selection1"
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/selection_circle.svg"
                 myId: "selection2"
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/selection_contour.svg"
                 myId: "selection3"
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/selection_magic_wand.svg"
                 myId: "selection4"
+                Layout.alignment: Qt.AlignHCenter
             }
         }
     }
@@ -267,8 +380,9 @@ ApplicationWindow {
 
         ColumnLayout {
             id: geometricBar
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.centerIn: parent
             spacing: 25
+            property var focusedButton: "geo1"
             property var selectedButton: "geo1"
             property var prevSelected: "geo1"
             property bool collision: false
@@ -276,22 +390,27 @@ ApplicationWindow {
             EyeButton {
                 imageURL: "figs/painting_square.svg"
                 myId: "geo1"
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/painting_circle.svg"
                 myId: "geo2"
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/path_bezier.svg"
                 myId: "geo3"
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/path_line.svg"
                 myId: "geo4"
+                Layout.alignment: Qt.AlignHCenter
             }
             EyeButton {
                 imageURL: "figs/path_polygon.svg"
                 myId: "geo5"
+                Layout.alignment: Qt.AlignHCenter
             }
         }
     }

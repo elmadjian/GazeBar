@@ -32,8 +32,14 @@ Rectangle {
                 trigger.state = trigger.defaultState;
                 if (trigger.defaultState == "open") {
                     trigger.defaultState = "closed";
+                    parent.border.width = 0;
+                    mainControl.clearBar = true;
+                    drawingCanvas.requestPaint();
                 } else {
                     trigger.defaultState = "open";
+                    parent.border.width = 2;
+                    mainControl.clearBar = false;
+                    drawingCanvas.requestPaint();
                 }
                 trigger.focused = false;
             }
@@ -81,4 +87,6 @@ Rectangle {
             }
         }
     ]
+
+
 }

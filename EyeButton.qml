@@ -26,7 +26,7 @@ Rectangle {
         var norm = Math.sqrt(Math.pow(newX, 2) + Math.pow(newY,2));
         if (norm < button.rad) {
             button.state = "focused";
-            parent.selectedButton = myId;
+            parent.focusedButton = myId;
             parent.collision = true;
         } else {
             button.state = defaultState;
@@ -81,6 +81,10 @@ Rectangle {
         fillMode: Image.PreserveAspectFit
         source:""
     }
+
+
+
+
 
 //    MouseArea {
 //        anchors.fill: parent
