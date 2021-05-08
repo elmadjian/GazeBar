@@ -1,4 +1,5 @@
 import sys
+import os
 import subprocess
 import socket
 import numpy as np
@@ -16,12 +17,16 @@ class ToolbarManager(QObject):
     def __init__(self):
         QObject.__init__(self)
         self.stop = False
-        subprocess.Popen(['./stream/streamer.exe'])
+        if os.name == 'nt':
+            subprocess.Popen(['./stream/streamer.exe'])
+        else:
+            subprocess.Popen(['./stream/streamer'])
         self.sock = self.create_connection('127.0.0.1', 9998)
         self.stream_thread = None
         self.keyboard = Controller()
         self.tools = self._populate_tools()
         self.curr_key = None
+        self.w, self.h = 1920, 1080
 
     def create_connection(self, ip, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,11 +39,27 @@ class ToolbarManager(QObject):
 
     def _stream_loop(self):
         while not self.stop:
-            data,_ = self.sock.recvfrom(1024)
-            data = data.decode().replace(',','.')
-            coord = data.split('~')
-            x, y = float(coord[1]), float(coord[2])
+            if os.name == 'nt':
+                x,y = self._stream_windows()
+            else:
+                x,y = self._stream_linux()
             self.update_position.emit(x,y)
+
+    def _stream_linux(self):
+        data,_ = self.sock.recvfrom(256)
+        data = data.decode('ascii', 'replace').split('\n')
+        coord = data[0].split('~')
+        if len(coord) == 3:
+            x, y = float(coord[1]), float(coord[2])
+            return int(self.w * x), int(self.h * y)
+        return 0,0
+
+    def _stream_windows(self):
+        data,_ = self.sock.recvfrom(1024)
+        data = data.decode().replace(',','.')
+        coord = data.split('~')
+        return float(coord[1]), float(coord[2])
+
 
     def _populate_tools(self):
         tools = {
