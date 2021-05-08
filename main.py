@@ -95,7 +95,6 @@ class ToolbarManager(QObject):
 
     @Slot(str)
     def update_tool(self, tool_id):
-        #pass
         if self.curr_key == "eraser":
             self.keyboard.press('e')
             self.keyboard.release('e')
