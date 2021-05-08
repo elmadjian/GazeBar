@@ -10,7 +10,6 @@ ApplicationWindow {
     flags: Qt.FramelessWindowHint | Qt.WindowTransparentForInput | Qt.WindowStaysOnTopHint
     width: 1920
     height: 1080
-    //color: "green"
     color: "transparent"
     visible: true
     signal updatePosition(var x, var y)
@@ -26,8 +25,8 @@ ApplicationWindow {
 
     onUpdatePosition: {
         //DEBUG!
-        gaze.x = x;
-        gaze.y = y;
+        //gaze.x = x;
+        //gaze.y = y;
 
         testBarCollision(bar, x, y, "bottom");
         testBarCollision(brushBar, x, y, "right");
@@ -190,6 +189,7 @@ ApplicationWindow {
         }
     }
 
+    //DEBUG: where the user is looking at
     Rectangle {
         id: gaze
         x: -99
@@ -205,7 +205,6 @@ ApplicationWindow {
         id: appWindow
         width: 1300
         height: 150
-        //color: "blue"
         color: "transparent"
         visible: true
         border.color: "#28afd1"

@@ -13,7 +13,6 @@ using Tobii.Interaction;
 
             var gazePointDataStream = host.Streams.CreateGazePointDataStream();
 
-
             gazePointDataStream.GazePoint((x,y,_) => {
                 string message = "g~"+x.ToString()+'~'+y.ToString();
                 var datagram = System.Text.Encoding.ASCII.GetBytes(message);

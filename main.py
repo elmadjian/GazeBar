@@ -81,13 +81,13 @@ class ToolbarManager(QObject):
 
             "geo1": [Key.ctrl, Key.alt, '.'],
             "geo2": [Key.ctrl, Key.alt, ';'],
-            "geo3": '',
-            "geo4": '',
-            "geo5": '',
+            "geo3": [Key.ctrl, '='],
+            "geo4": [Key.ctrl, Key.alt, '~'],
+            "geo5": [Key.ctrl, Key.alt, "'"],
 
             "selection1": [Key.ctrl, 'r'],
             "selection2": 'j',
-            "selection3": '',
+            "selection3": [Key.ctrl, Key.alt, '\\'],
             "selection4": [Key.ctrl, Key.alt, ']']
 
         }
