@@ -3,7 +3,9 @@ import os
 import subprocess
 import socket
 import numpy as np
+import argparse
 from pynput.keyboard import Key, Controller, KeyCode
+from pynput.mouse import Listener
 from threading import Thread
 from PySide2.QtGui import QGuiApplication
 from PySide2.QtQml import QQmlApplicationEngine
@@ -13,20 +15,34 @@ from PySide2.QtCore import QUrl, QObject, Signal, Slot
 class ToolbarManager(QObject):
 
     update_position = Signal(int, int)
+    update_selection = Signal()
 
     def __init__(self):
         QObject.__init__(self)
+        self.mode = self.get_mode()
         self.stop = False
-        if os.name == 'nt':
-            subprocess.Popen(['./stream/streamer.exe'])
-        else:
-            subprocess.Popen(['./stream/streamer'])
+        if self.mode != 'manual':
+            if os.name == 'nt':
+                subprocess.Popen(['./stream/streamer.exe'])
+            else:
+                subprocess.Popen(['./stream/streamer'])
         self.sock = self.create_connection('127.0.0.1', 9998)
         self.stream_thread = None
+        if self.mode == 'gazetouch':
+            self.stream_thread_two = None
         self.keyboard = Controller()
         self.tools = self._populate_tools()
         self.curr_key = None
         self.w, self.h = 1920, 1080
+
+    def get_mode(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-m',
+                            '--mode',
+                            default='gazeflow',
+                            required=False,
+                            choices=['gazeflow', 'dwell', 'gazetouch', 'manual'])
+        return parser.parse_args().mode
 
     def create_connection(self, ip, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,8 +50,33 @@ class ToolbarManager(QObject):
         return sock
 
     def stream_data(self):
-        self.stream_thread = Thread(target=self._stream_loop, args=())
-        self.stream_thread.start()
+        if self.mode != 'manual':
+            self.stream_thread = Thread(target=self._stream_loop, args=())
+            self.stream_thread.start()
+        if self.mode == 'manual':
+            self.stream_thread = Thread(target=self._mouse_loop, args=())
+            self.stream_thread.start()
+        if self.mode == 'gazetouch':
+            self.stream_thread_two = Thread(target=self._gazetouch_loop, args=())
+            self.stream_thread_two.start()
+
+    def _on_mouse_move(self, x, y):
+        self.update_position.emit(x, y)
+
+    def _on_mouse_click(self, x, y, button, pressed):
+        if pressed:
+            self.update_selection.emit()
+
+    def _mouse_loop(self):
+        with Listener(
+            on_move=self._on_mouse_move,
+            on_click=self._on_mouse_click
+            ) as listener:
+            listener.join()
+
+    def _gazetouch_loop(self):
+        with Listener(on_click=self._on_mouse_click) as listener:
+            listener.join()
 
     def _stream_loop(self):
         while not self.stop:
@@ -121,7 +162,10 @@ if __name__=='__main__':
     toolbar_manager.stream_data()
     
     engine.rootContext().setContextProperty("toolbarManager", toolbar_manager)
-    engine.load(QUrl("painting_tool.qml"))
+    engine.load(QUrl("painting_tool_manual.qml"))
+    #engine.load(QUrl("painting_tool_gazeflow.qml"))
+    #engine.load(QUrl("painting_tool_gazetouch.qml"))
+    #engine.load(QUrl("painting_tool_dwell.qml"))
 
     if not engine.rootObjects():
         sys.exit(-1)
