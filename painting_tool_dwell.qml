@@ -17,6 +17,7 @@ ApplicationWindow {
     property var secBar: false
     property var clearBar: true
     property bool updateFeedback: false
+    property var dwell_thresh: 300
 
 
     Component.onCompleted: {
@@ -27,8 +28,7 @@ ApplicationWindow {
         //DEBUG!
         //gaze.x = x;
         //gaze.y = y;
-
-        testBarCollision(bar, x, y, "bottom");
+        testBarCollision(bar, x, y, "mainBar");
         testBarCollision(brushBar, x, y, "right");
         testBarCollision(selectionBar, x, y, "right");
         testBarCollision(geometricBar, x, y, "right");
@@ -44,6 +44,43 @@ ApplicationWindow {
             }
         }
         checkUpdateFeedback(x, y);
+    }
+
+        //check collisions with a bar if it is visible
+    //--------------------------------------------
+    function testBarCollision(barId, x, y, label) {
+        if (barId.visible) {
+            for (var i=0; i < barId.children.length; i++) {
+                if (barId.children[i].objectName === "button") {
+                    barId.children[i].testCollision(x,y);
+                    if (barId.children[i].state === "selected") {
+                        barId.selectedButton = barId.children[i].myId;
+                        updateBarState(barId);
+                        if (label === "mainBar")
+                            updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
+                    }
+                }
+            }
+        }
+    }
+
+    //update which object is selected in a bar
+    //---------------------------------------
+    function updateBarState(barId) {
+        for (var i=0; i < barId.children.length; i++) {
+            if (barId.children[i].myId === barId.selectedButton) {
+                barId.children[i].defaultState = "selected";
+                updateFeedback = true;
+                feedbackImg.source = barId.children[i].imageURL;
+                if (barId.children[i].myId !== barId.prevSelected)
+                    toolbarManager.update_tool(String(barId.selectedButton));
+            }
+            else {
+                barId.children[i].defaultState = "unfocused";
+            }
+        }
+        barId.prevSelected = barId.selectedButton;
+        barId.collision = false;
     }
 
     //check whether we have to update feedback or not
@@ -78,49 +115,9 @@ ApplicationWindow {
         }
     }
 
-    //update which object is selected in a bar
-    //---------------------------------------
-    function updateBarState(barId) {
-        for (var i=0; i < barId.children.length; i++) {
-            if (barId.children[i].myId === barId.focusedButton) {
-                barId.children[i].defaultState = "selected";
-                barId.selectedButton = barId.focusedButton;
-                updateFeedback = true;
-                feedbackImg.source = barId.children[i].imageURL;
-            }
-            else if (barId.children[i].myId === barId.prevSelected) {
-                barId.children[i].defaultState = "unfocused";
-            }
-        }
-        barId.prevSelected = barId.selectedButton;
-        barId.collision = false;
-        toolbarManager.update_tool(String(barId.selectedButton));
-    }
 
-    //check collisions with a bar if it is visible
-    //--------------------------------------------
-    function testBarCollision(barId, x, y, position) {
-        if (barId.visible) {
-            for (var i=0; i < barId.children.length; i++) {
-                if (barId.children[i].objectName === "button") {
-                    barId.children[i].testCollision(x,y);
-                }
-            }
-            if (barId.focusedButton !== barId.prevSelected) {
-                if (position === "bottom" && barId.collision) {
-                    if (y + 150 < barId.y + barId.parent.y || y > barId.y + barId.parent.y + barId.height + 150) {
-                        updateBarState(barId);
-                        updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
-                    }
-                }
-                else if (position === "right" && barId.collision) {
-                    if (x + 100 < barId.x + barId.parent.x || x > barId.x + barId.parent.x + barId.width + 150) {
-                        updateBarState(barId);
-                    }
-                }
-            }
-        }
-    }
+
+
 
     Timer {
         id: feedbackTimer
@@ -238,38 +235,38 @@ ApplicationWindow {
             }
 
 
-            EyeButton {
+            EyeButtonDwell {
                 id: brush
                 imageURL: "figs/painting_brush.svg"
                 defaultState: "selected"
                 myId: "brush"
             }
-            EyeButton {
+            EyeButtonDwell {
                 id: bucket
                 imageURL: "figs/painting_bucket.svg"
                 myId: "bucket"
             }
-            EyeButton {
+            EyeButtonDwell {
                 id: eraser
                 imageURL: "figs/painting_eraser.svg"
                 myId: "eraser"
             }
-            EyeButton {
+            EyeButtonDwell {
                 id: crop
                 imageURL: "figs/painting_crop.png"
                 myId: "crop"
             }
-            EyeButton {
+            EyeButtonDwell {
                 id: circle
                 imageURL: "figs/painting_square.svg"
                 myId: "geo"
             }
-            EyeButton {
+            EyeButtonDwell {
                 id: square
                 imageURL: "figs/selection_square.svg"
                 myId: "select"
             }
-            EyeButton {
+            EyeButtonDwell {
                 id: move
                 imageURL: "figs/painting_move.svg"
                 myId: "move"
@@ -290,43 +287,43 @@ ApplicationWindow {
             property var prevSelected: "brush1"
             property bool collision: false
 
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/brush_1.png"
                 myId: "brush1"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/brush_2.png"
                 myId: "brush2"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/brush_3.png"
                 myId: "brush3"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/brush_4.png"
                 myId: "brush4"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/brush_5.png"
                 myId: "brush5"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/brush_6.png"
                 myId: "brush6"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/brush_7.png"
                 myId: "brush7"
                 fac: 0.8
@@ -349,22 +346,22 @@ ApplicationWindow {
             property var prevSelected: "selection1"
             property bool collision: false
 
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/selection_square.svg"
                 myId: "selection1"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/selection_circle.svg"
                 myId: "selection2"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/selection_contour.svg"
                 myId: "selection3"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/selection_magic_wand.svg"
                 myId: "selection4"
                 Layout.alignment: Qt.AlignHCenter
@@ -386,27 +383,27 @@ ApplicationWindow {
             property var prevSelected: "geo1"
             property bool collision: false
 
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/painting_square.svg"
                 myId: "geo1"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/painting_circle.svg"
                 myId: "geo2"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/path_bezier.svg"
                 myId: "geo3"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/path_line.svg"
                 myId: "geo4"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonDwell {
                 imageURL: "figs/path_polygon.svg"
                 myId: "geo5"
                 Layout.alignment: Qt.AlignHCenter

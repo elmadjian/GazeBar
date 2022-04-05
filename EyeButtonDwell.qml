@@ -11,6 +11,44 @@ Rectangle {
     property var rad: -1
     property var myId: -1
     property var fac: 0.65
+    property var perc: 0
+    property var step: 0
+    property var dwellThresh: 31.25 // approx. 500 ms due to animation fixed at 60fps
+
+    Timer {
+        id: buttonTimer
+        interval: 16
+        running: false
+        repeat: true
+        onTriggered: {
+            button.perc = button.perc + button.step;
+            buttonCanvas.requestPaint();
+        }
+    }
+
+    Canvas {
+        id: buttonCanvas
+        anchors.fill: parent
+        onPaint: {
+            var ctx = getContext("2d");
+            var cx = width/2;
+            var cy = height/2;
+
+            ctx.beginPath();
+            ctx.fillStyle = "orange";
+            ctx.moveTo(cx, cy);            
+            ctx.arc(cx, cy, width/2, 0, 2*Math.PI*button.perc, false);
+            ctx.lineTo(cx, cy);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.fillStyle = button.color;
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, width/2.35, 0, 2*Math.PI, false);
+            ctx.lineTo(cx, cy);
+            ctx.fill();            
+        }
+    }
 
     state: defaultState
 
@@ -18,6 +56,7 @@ Rectangle {
         button.xpos = button.x + parent.x + parent.parent.x + button.implicitWidth/2;
         button.ypos = button.y + parent.y + parent.parent.y + button.implicitHeight/2;
         button.rad = button.implicitWidth/2;
+        button.step = 1.0/button.dwellThresh;
     }
 
     function testCollision(x, y) {
@@ -28,8 +67,17 @@ Rectangle {
             button.state = "focused";
             parent.focusedButton = myId;
             parent.collision = true;
+            if (!buttonTimer.running) {
+                buttonTimer.start();
+            }
+            if (button.perc >= 1 && button.state != "selected"){
+                button.state = "selected";
+            }
         } else {
-            button.state = defaultState;
+            button.state = button.defaultState;
+            buttonTimer.stop();
+            button.perc = 0;
+            buttonCanvas.requestPaint();
         }
     }
 

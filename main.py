@@ -162,10 +162,17 @@ if __name__=='__main__':
     toolbar_manager.stream_data()
     
     engine.rootContext().setContextProperty("toolbarManager", toolbar_manager)
-    engine.load(QUrl("painting_tool_manual.qml"))
-    #engine.load(QUrl("painting_tool_gazeflow.qml"))
-    #engine.load(QUrl("painting_tool_gazetouch.qml"))
-    #engine.load(QUrl("painting_tool_dwell.qml"))
+    mode = toolbar_manager.mode
+    if mode == 'manual':
+        engine.load(QUrl("painting_tool_manual.qml"))
+    elif mode == 'dwell':
+        engine.load(QUrl("painting_tool_dwell.qml"))
+    elif mode == 'gazeflow':
+        engine.load(QUrl("painting_tool_gazeflow.qml"))
+    elif mode == 'gazetouch':
+        engine.load(QUrl("painting_tool_gazetouch.qml"))
+    else:
+        sys.exit(-1)
 
     if not engine.rootObjects():
         sys.exit(-1)
