@@ -129,8 +129,9 @@ class ToolbarManager(QObject):
             "selection1": [Key.ctrl, 'r'],
             "selection2": 'j',
             "selection3": [Key.ctrl, Key.alt, '\\'],
-            "selection4": [Key.ctrl, Key.alt, ']']
+            "selection4": [Key.ctrl, Key.alt, ']'],
 
+            'no_mouse': [Key.ctrl, '\\'],
         }
         return tools
 

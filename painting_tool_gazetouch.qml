@@ -7,20 +7,27 @@ import QtGraphicalEffects 1.12
 
 ApplicationWindow {
     id: mainControl
-    flags: Qt.FramelessWindowHint | Qt.WindowTransparentForInput | Qt.WindowStaysOnTopHint
+    flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput
     width: 1920
     height: 1080
     color: "transparent"
     visible: true
     signal updatePosition(var x, var y)
+    signal updateSelection();
     property var bars: [brushBarWindow, geometricBarWindow, selectionBarWindow]
     property var secBar: false
     property var clearBar: true
     property bool updateFeedback: false
+    property bool click: false
 
 
     Component.onCompleted: {
         toolbarManager.update_position.connect(updatePosition);
+        toolbarManager.update_selection.connect(updateSelection);
+    }
+
+    onUpdateSelection: {
+        click = true;
     }
 
     onUpdatePosition: {
@@ -32,6 +39,7 @@ ApplicationWindow {
         testBarCollision(brushBar, x, y, "right");
         testBarCollision(selectionBar, x, y, "right");
         testBarCollision(geometricBar, x, y, "right");
+        click = false;
         if (bottomTrigger.testCollision(x,y) === "open") {
             bar.visible = true;
             if (typeof bar.barIdx[bar.selectedButton] !== "undefined") {
@@ -44,6 +52,35 @@ ApplicationWindow {
             }
         }
         checkUpdateFeedback(x, y);
+    }
+
+
+    //check collisions with a bar if it is visible
+    //--------------------------------------------
+    function testBarCollision(barId, x, y, position) {
+        if (barId.visible) {
+            for (var i=0; i < barId.children.length; i++) {
+                if (barId.children[i].objectName === "button") {
+                    barId.children[i].testCollision(x,y, click);
+                }
+            }
+            if (position === "bottom" && barId.collision) {
+                if (y + 150 < barId.y + barId.parent.y || y > barId.y + barId.parent.y + barId.height + 150) {
+                    updateBarState(barId);
+                    updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
+                } else {
+                    toolbarManager.update_tool('no_mouse');
+                }
+            }
+            else if (position === "right" && barId.collision) {
+                if (x + 100 < barId.x + barId.parent.x || x > barId.x + barId.parent.x + barId.width + 150) {
+                    updateBarState(barId);
+                }
+                else {
+                    toolbarManager.update_tool('no_mouse');
+                }
+            }
+        }
     }
 
     //check whether we have to update feedback or not
@@ -83,44 +120,20 @@ ApplicationWindow {
     function updateBarState(barId) {
         for (var i=0; i < barId.children.length; i++) {
             if (barId.children[i].myId === barId.focusedButton) {
-                barId.children[i].defaultState = "selected";
-                barId.selectedButton = barId.focusedButton;
+                barId.selectedButton = barId.children[i].myId;
                 updateFeedback = true;
                 feedbackImg.source = barId.children[i].imageURL;
             }
-            else if (barId.children[i].myId === barId.prevSelected) {
+            else {
                 barId.children[i].defaultState = "unfocused";
             }
         }
         barId.prevSelected = barId.selectedButton;
         barId.collision = false;
         toolbarManager.update_tool(String(barId.selectedButton));
+        toolbarManager.update_tool(String(bar.selectedButton));
     }
 
-    //check collisions with a bar if it is visible
-    //--------------------------------------------
-    function testBarCollision(barId, x, y, position) {
-        if (barId.visible) {
-            for (var i=0; i < barId.children.length; i++) {
-                if (barId.children[i].objectName === "button") {
-                    barId.children[i].testCollision(x,y);
-                }
-            }
-            if (barId.focusedButton !== barId.prevSelected) {
-                if (position === "bottom" && barId.collision) {
-                    if (y + 150 < barId.y + barId.parent.y || y > barId.y + barId.parent.y + barId.height + 150) {
-                        updateBarState(barId);
-                        updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
-                    }
-                }
-                else if (position === "right" && barId.collision) {
-                    if (x + 100 < barId.x + barId.parent.x || x > barId.x + barId.parent.x + barId.width + 150) {
-                        updateBarState(barId);
-                    }
-                }
-            }
-        }
-    }
 
     Timer {
         id: feedbackTimer
@@ -238,38 +251,38 @@ ApplicationWindow {
             }
 
 
-            EyeButton {
+            EyeButtonGazetouch {
                 id: brush
                 imageURL: "figs/painting_brush.svg"
                 defaultState: "selected"
                 myId: "brush"
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 id: bucket
                 imageURL: "figs/painting_bucket.svg"
                 myId: "bucket"
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 id: eraser
                 imageURL: "figs/painting_eraser.svg"
                 myId: "eraser"
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 id: crop
                 imageURL: "figs/painting_crop.png"
                 myId: "crop"
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 id: circle
                 imageURL: "figs/painting_square.svg"
                 myId: "geo"
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 id: square
                 imageURL: "figs/selection_square.svg"
                 myId: "select"
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 id: move
                 imageURL: "figs/painting_move.svg"
                 myId: "move"
@@ -290,43 +303,43 @@ ApplicationWindow {
             property var prevSelected: "brush1"
             property bool collision: false
 
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/brush_1.png"
                 myId: "brush1"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/brush_2.png"
                 myId: "brush2"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/brush_3.png"
                 myId: "brush3"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/brush_4.png"
                 myId: "brush4"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/brush_5.png"
                 myId: "brush5"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/brush_6.png"
                 myId: "brush6"
                 fac: 0.8
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/brush_7.png"
                 myId: "brush7"
                 fac: 0.8
@@ -349,22 +362,22 @@ ApplicationWindow {
             property var prevSelected: "selection1"
             property bool collision: false
 
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/selection_square.svg"
                 myId: "selection1"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/selection_circle.svg"
                 myId: "selection2"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/selection_contour.svg"
                 myId: "selection3"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/selection_magic_wand.svg"
                 myId: "selection4"
                 Layout.alignment: Qt.AlignHCenter
@@ -386,27 +399,27 @@ ApplicationWindow {
             property var prevSelected: "geo1"
             property bool collision: false
 
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/painting_square.svg"
                 myId: "geo1"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/painting_circle.svg"
                 myId: "geo2"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/path_bezier.svg"
                 myId: "geo3"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/path_line.svg"
                 myId: "geo4"
                 Layout.alignment: Qt.AlignHCenter
             }
-            EyeButton {
+            EyeButtonGazetouch {
                 imageURL: "figs/path_polygon.svg"
                 myId: "geo5"
                 Layout.alignment: Qt.AlignHCenter
