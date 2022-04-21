@@ -4,6 +4,7 @@ Rectangle {
     id: button
     objectName: "button"
     radius: width*0.5
+    state: defaultState
     property alias imageURL: buttonImg.source
     property string defaultState: "unfocused"
     property var xpos: -1
@@ -13,15 +14,15 @@ Rectangle {
     property var fac: 0.65
     property var perc: 0
     property var step: 0
-    property var dwellThresh: 31.25 // approx. 500 ms due to animation fixed at 60fps
+    property var dwellThresh: 45 //approx 500ms
 
     Timer {
         id: buttonTimer
-        interval: 16
+        interval: 5
         running: false
         repeat: true
         onTriggered: {
-            button.perc = button.perc + button.step;
+            button.perc += button.step;
             buttonCanvas.requestPaint();
         }
     }
@@ -50,7 +51,6 @@ Rectangle {
         }
     }
 
-    state: defaultState
 
     Component.onCompleted: {
         button.xpos = button.x + parent.x + parent.parent.x + button.implicitWidth/2;

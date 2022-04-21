@@ -39,8 +39,7 @@ ApplicationWindow {
         testBarCollision(brushBar, x, y, "right");
         testBarCollision(selectionBar, x, y, "right");
         testBarCollision(geometricBar, x, y, "right");
-        click = false;
-        if (bottomTrigger.testCollision(x,y) === "open") {
+        if (bottomTrigger.testCollision(x,y, click) === "open") {
             bar.visible = true;
             if (typeof bar.barIdx[bar.selectedButton] !== "undefined") {
                 bars[bar.barIdx[bar.selectedButton]].visible = true;
@@ -51,6 +50,7 @@ ApplicationWindow {
                 bars[i].visible = false;
             }
         }
+        click = false;
         checkUpdateFeedback(x, y);
     }
 
@@ -228,7 +228,7 @@ ApplicationWindow {
         anchors.verticalCenterOffset: 430
         property var iconSize: appWindow.height
 
-        Trigger {
+        TriggerGazetouch {
             id: bottomTrigger
             myId: "bottomTrigger"
             anchors.verticalCenter: parent.verticalCenter

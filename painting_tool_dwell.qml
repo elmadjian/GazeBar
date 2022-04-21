@@ -117,8 +117,6 @@ ApplicationWindow {
 
 
 
-
-
     Timer {
         id: feedbackTimer
         interval: 200
@@ -212,7 +210,7 @@ ApplicationWindow {
         anchors.verticalCenterOffset: 430
         property var iconSize: appWindow.height
 
-        Trigger {
+        TriggerDwell {
             id: bottomTrigger
             myId: "bottomTrigger"
             anchors.verticalCenter: parent.verticalCenter
