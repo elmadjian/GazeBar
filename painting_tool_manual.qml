@@ -53,7 +53,7 @@ ApplicationWindow {
     function checkBarVisibility() {
         console.log(bottomTrigger.defaultState);
         bottomTrigger.changeDefaultSate();
-        if (bottomTrigger.defaultState == "open") {
+        if (bottomTrigger.defaultState === "open") {
             bar.visible = true;
             if (typeof bar.barIdx[bar.selectedButton] !== "undefined") {
                 bars[bar.barIdx[bar.selectedButton]].visible = true;
@@ -76,7 +76,7 @@ ApplicationWindow {
                     barId.children[i].testCollision(x,y); //button collision
                     if (click) {
                         updateBarState(barId);
-                        if (label == "mainBar")
+                        if (label === "mainBar")
                             updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
                     }
                 }

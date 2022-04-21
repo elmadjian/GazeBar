@@ -14,11 +14,11 @@ Rectangle {
     property var fac: 0.65
     property var perc: 0
     property var step: 0
-    property var dwellThresh: 45 //approx 500ms
+    property var dwellThresh: 31.25 //approx. 500 ms due to animation fixed at 60fps
 
     Timer {
         id: buttonTimer
-        interval: 5
+        interval: 16
         running: false
         repeat: true
         onTriggered: {

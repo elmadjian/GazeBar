@@ -130,8 +130,8 @@ ApplicationWindow {
         }
         barId.prevSelected = barId.selectedButton;
         barId.collision = false;
-        toolbarManager.update_tool(String(barId.selectedButton));
         toolbarManager.update_tool(String(bar.selectedButton));
+        toolbarManager.update_tool(String(barId.selectedButton));
     }
 
 

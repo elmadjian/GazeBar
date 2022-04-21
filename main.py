@@ -103,7 +103,7 @@ class ToolbarManager(QObject):
 
 
     def _populate_tools(self):
-        tools = {
+        return {
             "brush": 'b',
             "bucket": 'f',
             "crop": 'c',
@@ -121,19 +121,18 @@ class ToolbarManager(QObject):
             "brush7": [Key.ctrl, Key.alt, KeyCode.from_vk(103)],
 
             "geo1": [Key.ctrl, Key.alt, '.'],
-            "geo2": [Key.ctrl, Key.alt, ';'],
+            "geo2": [Key.ctrl, ':'],
             "geo3": [Key.ctrl, '='],
-            "geo4": [Key.ctrl, Key.alt, '~'],
-            "geo5": [Key.ctrl, Key.alt, "'"],
+            "geo4": [Key.ctrl, '|'],
+            "geo5": [Key.ctrl, "'"],
 
             "selection1": [Key.ctrl, 'r'],
             "selection2": 'j',
-            "selection3": [Key.ctrl, Key.alt, '\\'],
-            "selection4": [Key.ctrl, Key.alt, ']'],
+            "selection3": [Key.ctrl, '}'],
+            "selection4": [Key.ctrl, '{'],
 
             'no_mouse': [Key.ctrl, '\\'],
         }
-        return tools
 
     @Slot(str)
     def update_tool(self, tool_id):
@@ -141,6 +140,7 @@ class ToolbarManager(QObject):
             self.keyboard.press('e')
             self.keyboard.release('e')
         self.curr_key = tool_id
+        print("GOT:", tool_id)
         key = self.tools[tool_id]
         if len(key) == 1:
             self.keyboard.press(key)
