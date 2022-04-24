@@ -18,6 +18,8 @@ ApplicationWindow {
     property var secBar: false
     property var clearBar: true
     property bool updateFeedback: false
+    property var mx: 0
+    property var my: 0
 
 
     Component.onCompleted: {
@@ -29,19 +31,21 @@ ApplicationWindow {
         //DEBUG!
         //gaze.x = x;
         //gaze.y = y;
-        testBarCollision(bar, x, y, "mainBar", false);
-        testBarCollision(brushBar, x, y, "", false);
-        testBarCollision(selectionBar, x, y, "", false);
-        testBarCollision(geometricBar, x, y, "", false);
+        testBarCollision(bar, x, y, "bottom", false);
+        testBarCollision(brushBar, x, y, "right", false);
+        testBarCollision(selectionBar, x, y, "right", false);
+        testBarCollision(geometricBar, x, y, "right", false);
         bottomTrigger.testCollision(x, y);
         checkUpdateFeedback(x, y);
+        mx = x;
+        my = y;
     }
 
     onUpdateSelection: {
-        testBarCollision(bar, x, y, "mainBar", true);
-        testBarCollision(brushBar, x, y, "", true);
-        testBarCollision(selectionBar, x, y, "", true);
-        testBarCollision(geometricBar, x, y, "", true);
+        testBarCollision(bar, mx, my, "bottom", true);
+        testBarCollision(brushBar, mx, my, "right", true);
+        testBarCollision(selectionBar, mx, my, "right", true);
+        testBarCollision(geometricBar, mx, my, "right", true);
         if (bottomTrigger.focused) {
             checkBarVisibility();
         }
@@ -69,20 +73,35 @@ ApplicationWindow {
 
     //check collisions with a bar if it is visible
     //--------------------------------------------
-    function testBarCollision(barId, x, y, label, click) {
+    function testBarCollision(barId, x, y, position, click) {
         if (barId.visible) {
             for (var i=0; i < barId.children.length; i++) {
                 if (barId.children[i].objectName === "button") {
                     barId.children[i].testCollision(x,y); //button collision
-                    if (click) {
-                        updateBarState(barId);
-                        if (label === "mainBar")
-                            updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
-                    }
                 }
+            }
+            if (click) {
+                updateBarState(barId, x, y, position);
+                if (position === "bottom")
+                    updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
             }
         }
     }
+
+    //check whether the cursor is hovering a bar
+    //------------------------------------------
+    function checkIsOverBar(barId, x, y, position) {
+        if (y >= bar.y + bar.parent.y && y <= bar.y + bar.parent.y + bar.height) {
+            return true;
+        }
+        else if (position === "right" && (x >= barId.x + barId.parent.x &&
+                                          x <= barId.x + barId.parent.x + barId.width)) {
+            return true;
+        }
+        return false;
+    }
+
+
 
     //check whether we have to update feedback or not
     //------------------------------------------------
@@ -118,7 +137,7 @@ ApplicationWindow {
 
     //update which object is selected in a bar
     //---------------------------------------
-    function updateBarState(barId) {
+    function updateBarState(barId, x, y, position) {
         for (var i=0; i < barId.children.length; i++) {
             if (barId.children[i].myId === barId.focusedButton) {
                 barId.children[i].defaultState = "selected";
@@ -132,7 +151,9 @@ ApplicationWindow {
         }
         barId.prevSelected = barId.selectedButton;
         barId.collision = false;
-        toolbarManager.update_tool(String(barId.selectedButton));
+        if (checkIsOverBar(barId, x, y, position)) {
+            toolbarManager.update_tool(String(barId.selectedButton));
+        }
     }
 
 
