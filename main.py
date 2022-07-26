@@ -9,7 +9,7 @@ from pynput.mouse import Listener
 from threading import Thread
 from PySide2.QtGui import QGuiApplication
 from PySide2.QtQml import QQmlApplicationEngine
-from PySide2.QtCore import QUrl, QObject, Signal, Slot
+from PySide2.QtCore import QUrl, QObject, Signal, Slot, Property
 
 
 class ToolbarManager(QObject):
@@ -19,7 +19,9 @@ class ToolbarManager(QObject):
 
     def __init__(self):
         QObject.__init__(self)
-        self.mode = self.get_mode()
+        args = self.get_args()
+        self.mode = args.mode
+        self.debug_mode = args.debug
         self.stop = False
         if self.mode != 'manual':
             if os.name == 'nt':
@@ -35,14 +37,19 @@ class ToolbarManager(QObject):
         self.curr_key = None
         self.w, self.h = 1920, 1080
 
-    def get_mode(self):
+    def get_args(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-m',
                             '--mode',
                             default='gazeflow',
                             required=False,
                             choices=['gazeflow', 'dwell', 'gazetouch', 'manual'])
-        return parser.parse_args().mode
+        parser.add_argument('-d',
+                            '--debug',
+                            default='debug',
+                            required=False,
+                            action='store_true')
+        return parser.parse_args()
 
     def create_connection(self, ip, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -140,7 +147,6 @@ class ToolbarManager(QObject):
             self.keyboard.press('e')
             self.keyboard.release('e')
         self.curr_key = tool_id
-        print("GOT:", tool_id)
         key = self.tools[tool_id]
         if len(key) == 1:
             self.keyboard.press(key)
@@ -150,6 +156,10 @@ class ToolbarManager(QObject):
                 self.keyboard.press(k)
             for k in reversed(key):
                 self.keyboard.release(k)
+
+    @Property(bool)
+    def debug(self):
+        return self.debug_mode
 
 
 

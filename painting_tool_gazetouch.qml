@@ -15,6 +15,7 @@ ApplicationWindow {
     signal updatePosition(var x, var y)
     signal updateSelection();
     property var bars: [brushBarWindow, geometricBarWindow, selectionBarWindow]
+    property var barsIdx: [brushBar, geometricBar, selectionBar]
     property var secBar: false
     property var clearBar: true
     property bool updateFeedback: false
@@ -32,8 +33,10 @@ ApplicationWindow {
 
     onUpdatePosition: {
         //DEBUG!
-        //gaze.x = x;
-        //gaze.y = y;
+        if (toolbarManager.debug) {
+            gaze.x = x;
+            gaze.y = y;
+        }
 
         testBarCollision(bar, x, y, "bottom");
         testBarCollision(brushBar, x, y, "right");
@@ -51,7 +54,7 @@ ApplicationWindow {
             }
         }
         click = false;
-        checkUpdateFeedback(x, y);
+       // checkUpdateFeedback(x, y);
     }
 
 
@@ -68,6 +71,10 @@ ApplicationWindow {
                 if (y + 150 < barId.y + barId.parent.y || y > barId.y + barId.parent.y + barId.height + 150) {
                     updateBarState(barId);
                     updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
+                    var secBarId = barsIdx[barId.barIdx[barId.selectedButton]];
+                    if (typeof(secBarId) !== "undefined") {
+                        updateBarState(secBarId);
+                    }
                 } else {
                     toolbarManager.update_tool('no_mouse');
                 }

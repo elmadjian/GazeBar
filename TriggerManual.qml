@@ -41,13 +41,11 @@ Rectangle {
             parent.border.width = 0;
             mainControl.clearBar = true;
             drawingCanvas.requestPaint();
-            console.log("estava open");
         } else {
             trigger.defaultState = "open";
             parent.border.width = 2;
             mainControl.clearBar = false;
             drawingCanvas.requestPaint();
-            console.log("estava closed");
         }
     }
 

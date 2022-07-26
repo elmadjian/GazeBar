@@ -14,6 +14,7 @@ ApplicationWindow {
     visible: true
     signal updatePosition(var x, var y)
     property var bars: [brushBarWindow, geometricBarWindow, selectionBarWindow]
+    property var barsIdx: [brushBar, geometricBar, selectionBar]
     property var secBar: false
     property var clearBar: true
     property bool updateFeedback: false
@@ -25,9 +26,10 @@ ApplicationWindow {
     }
 
     onUpdatePosition: {
-        //DEBUG!
-        //gaze.x = x;
-        //gaze.y = y;
+        if (toolbarManager.debug) {
+            gaze.x = x;
+            gaze.y = y;
+        }
         testBarCollision(bar, x, y, "mainBar");
         testBarCollision(brushBar, x, y, "right");
         testBarCollision(selectionBar, x, y, "right");
@@ -43,7 +45,7 @@ ApplicationWindow {
                 bars[i].visible = false;
             }
         }
-        checkUpdateFeedback(x, y);
+        //checkUpdateFeedback(x, y);
     }
 
         //check collisions with a bar if it is visible
@@ -55,9 +57,10 @@ ApplicationWindow {
                     barId.children[i].testCollision(x,y);
                     if (barId.children[i].state === "selected") {
                         barId.selectedButton = barId.children[i].myId;
-                        updateBarState(barId);
-                        if (label === "mainBar")
+                        updateBarState(barId, label);
+                        if (label === "mainBar") {
                             updateSecBarVisibility(barId.barIdx[barId.selectedButton]);
+                        }
                     }
                 }
             }
@@ -66,14 +69,21 @@ ApplicationWindow {
 
     //update which object is selected in a bar
     //---------------------------------------
-    function updateBarState(barId) {
+    function updateBarState(barId, label) {
         for (var i=0; i < barId.children.length; i++) {
             if (barId.children[i].myId === barId.selectedButton) {
                 barId.children[i].defaultState = "selected";
                 updateFeedback = true;
                 feedbackImg.source = barId.children[i].imageURL;
-                if (barId.children[i].myId !== barId.prevSelected)
+                if (barId.children[i].myId !== barId.prevSelected) {
                     toolbarManager.update_tool(String(barId.selectedButton));
+                    if (label === "mainBar") {
+                        var secBarId = barsIdx[barId.barIdx[barId.selectedButton]];
+                        if (typeof(secBarId) !== "undefined") {
+                            toolbarManager.update_tool(String(secBarId.selectedButton));
+                        }
+                    }
+                }
             }
             else {
                 barId.children[i].defaultState = "unfocused";

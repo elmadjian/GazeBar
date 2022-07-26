@@ -20,6 +20,7 @@ ApplicationWindow {
     property bool updateFeedback: false
     property var mx: 0
     property var my: 0
+    property bool changed: false
 
 
     Component.onCompleted: {
@@ -28,15 +29,16 @@ ApplicationWindow {
     }
 
     onUpdatePosition: {
-        //DEBUG!
-        //gaze.x = x;
-        //gaze.y = y;
+        if (toolbarManager.debug) {
+            gaze.x = x;
+            gaze.y = y;
+        }
         testBarCollision(bar, x, y, "bottom", false);
         testBarCollision(brushBar, x, y, "right", false);
         testBarCollision(selectionBar, x, y, "right", false);
         testBarCollision(geometricBar, x, y, "right", false);
         bottomTrigger.testCollision(x, y);
-        checkUpdateFeedback(x, y);
+        //checkUpdateFeedback(x, y);
         mx = x;
         my = y;
     }
@@ -55,7 +57,6 @@ ApplicationWindow {
     //run the trigger check to show or hide bars
     //------------------------------------------
     function checkBarVisibility() {
-        console.log(bottomTrigger.defaultState);
         bottomTrigger.changeDefaultSate();
         if (bottomTrigger.defaultState === "open") {
             bar.visible = true;
@@ -80,6 +81,13 @@ ApplicationWindow {
                     barId.children[i].testCollision(x,y); //button collision
                 }
             }
+            if (checkIsOverBar(x, y) && !(changed)) {
+                toolbarManager.update_tool('no_mouse');
+                changed = true;
+            }
+            else if (!(checkIsOverBar(x, y)) && changed) {
+                changed = false;
+            }
             if (click) {
                 updateBarState(barId, x, y, position);
                 if (position === "bottom")
@@ -89,13 +97,12 @@ ApplicationWindow {
     }
 
     //check whether the cursor is hovering a bar
-    //------------------------------------------
-    function checkIsOverBar(barId, x, y, position) {
-        if (y >= bar.y + bar.parent.y && y <= bar.y + bar.parent.y + bar.height) {
-            return true;
-        }
-        else if (position === "right" && (x >= barId.x + barId.parent.x &&
-                                          x <= barId.x + barId.parent.x + barId.width)) {
+    //------------------------------------------j
+    function checkIsOverBar(x, y) {
+        if ((y >= bar.y + bar.parent.y &&
+             y <= bar.y + bar.parent.y + bar.height) || (
+             x >= brushBar.x + brushBar.parent.x &&
+             x <= brushBar.x + brushBar.parent.x + brushBar.width)) {
             return true;
         }
         return false;
@@ -151,7 +158,8 @@ ApplicationWindow {
         }
         barId.prevSelected = barId.selectedButton;
         barId.collision = false;
-        if (checkIsOverBar(barId, x, y, position)) {
+        if (checkIsOverBar(x, y)) {
+            toolbarManager.update_tool(String(bar.selectedButton));
             toolbarManager.update_tool(String(barId.selectedButton));
         }
     }
@@ -159,7 +167,7 @@ ApplicationWindow {
 
 
     Timer {
-        id: feedbackTimer
+        id: feedbackTimert
         interval: 200
         running: false
         repeat: false
@@ -263,6 +271,7 @@ ApplicationWindow {
             id: bar
             anchors.centerIn: parent
             spacing: 40
+            property var name: "mainBar"
             property var focusedButton: "brush"
             property var selectedButton: "brush"
             property var prevSelected: "brush"
@@ -321,6 +330,7 @@ ApplicationWindow {
             id: brushBar
             spacing: 20
             anchors.centerIn: parent
+            property var name: "brushBar"
             property var focusedButton: "brush1"
             property var selectedButton: "brush1"
             property var prevSelected: "brush1"
@@ -380,6 +390,7 @@ ApplicationWindow {
             id: selectionBar
             anchors.centerIn: parent
             spacing: 25
+            property var name: "selBar"
             property var focusedButton: "selection1"
             property var selectedButton: "selection1"
             property var prevSelected: "selection1"
@@ -417,6 +428,7 @@ ApplicationWindow {
             id: geometricBar
             anchors.centerIn: parent
             spacing: 25
+            property var name: "geoBar"
             property var focusedButton: "geo1"
             property var selectedButton: "geo1"
             property var prevSelected: "geo1"
